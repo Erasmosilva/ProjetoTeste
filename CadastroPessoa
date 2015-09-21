@@ -1,0 +1,61 @@
+<?php 
+// Recebemos envios de qualquer origem
+header("Access-Control-Allow-Orgin: *");
+header("Access-Control-Allow-Methods: *");
+
+// Setamos o header para aplicaçao em json
+header("Content-Type: application/json");
+
+// Incluimos e chamamos a classe do banco de dados
+include("class.mysql.php");
+$db = new classMySQL();
+
+// Vejo se estamos recebendo um arquivo json via POST
+$json = json_decode(file_get_contents('php://input'), true);
+
+// Se sim, setamos o a variavel $_POST para receber os dados do json
+// Utilizei esse metodo para nao criar outras variaveis e regras pra isso, sendo que ja existem
+if($json == true){
+   
+   $_POST['pessoaNome']     = $json['pessoaNome'];
+   $_POST['pessoaTelefone'] = $json['pessoaTelefone'];
+   $_POST['pessoaStatus']   =1;
+        
+}
+
+    // Verificamos todos os dados, para saber se estao setados e se nao estao vazios
+    if($db->consulta_registros() == 0){
+      if(isset($_POST['pessoaNome']) AND $_POST['pessoaNome'] != ""){
+        $pessoaNome = $_POST['pessoaNome'];
+      }
+
+      if(isset($_POST['pessoaTelefone']) AND $_POST['pessoaTelefone'] != ""){
+        $pessoaTelefone = $_POST['pessoaTelefone'];
+      }
+
+      // Tabela em qual iremos inserir os dados
+      $tabela = 'tb_pessoas';
+      // Dados que serao inseridos na tabela, lado esquerdo o campo no banco, lado direito a variavel
+      $dados = array(
+        
+        'pessoaNome' => utf8_decode("$pessoaNome"),
+        'pessoaTelefone'=> utf8_decode('$pessoaTelefone'),
+        'pessoaStatus'="1" 
+        );
+    
+      // Efetuamos a insercao no banco de dados
+      $db->inserir_dados($tabela, $dados);
+
+      // Retornamos o status e a mensagem em JSON
+      $mensagem["status"]   = "SUCESSO";
+      $mensagem["mensagem"] = "Nome foi cadastrado com sucesso.";
+      echo json_encode($mensagem);
+    else{
+      // Se houver erro, retornamos o status e a mensagem de erro em JSON
+      $mensagem["status"]   = "ERRO";
+      $mensagem["mensagem"] = "O Nome informado já foi cadastrado.";
+      echo json_encode($mensagem);
+    }
+  
+
+?>
